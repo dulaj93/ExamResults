@@ -4,9 +4,12 @@ from threading import Thread
 import requests
 
 starting_index = 5000000
-ending_index = 10000000
+ending_index = 5001000
+# ending_index = 10000000
 thread_count = 500
 file_name = "results_2022.txt"
+
+is_connection_error = False
 
 
 logging.basicConfig(filename='application.log', level=logging.INFO)
@@ -18,7 +21,12 @@ def fetch_results(url):
 
 
 def valid_result(results):
-    return "Invalid Index/NIC Number" not in results
+    global is_connection_error
+    if ("403 Forbidden" in results):
+        is_connection_error = True
+        return False
+    else:
+        return "Invalid Index/NIC Number" not in results
 
 
 def append_to_file(results):
@@ -55,7 +63,7 @@ def consume(index_queue, results_queue, identifier):
     logging.info(f'Consumer {identifier}: Running')
     while True:
         index_no = index_queue.get()
-        if index_no is None:  # check for stop
+        if (index_no is None) or (is_connection_error):  # check for stop
             index_queue.put(None)  # add the signal back for other consumers
             break
         logging.info(f'>Consumer {identifier} got {index_no}')
@@ -67,7 +75,7 @@ def file_write(queue):
     logging.info('File writer: Running')
     while True:
         result = queue.get()
-        if result is None:  # check for stop
+        if (result is None) or (is_connection_error):  # check for stop
             break
         append_to_file(result)
     logging.info('File writer: Done')
