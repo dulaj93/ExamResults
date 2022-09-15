@@ -22,4 +22,4 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Run a Python script
-        run: python .github/ExamResults/parser/web_app.py
+        run: python .github/workflows/web_app.py
